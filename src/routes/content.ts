@@ -70,8 +70,7 @@ contentRouter.get("/share", async (req, res) => {
 
   const user = await ContentModel.findOne({
     userId: userId,
-    courseId: courseId,
-  }).populate("courseId");
+  });
 
   if (user) {
   }

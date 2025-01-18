@@ -1,3 +1,5 @@
+import dotenv from "dotenv";
+dotenv.config();
 import express from "express";
 import mongoose from "mongoose";
 import userRouter from "./routes/userRouter";
@@ -10,9 +12,8 @@ app.use("/api/v1/user", userRouter);
 app.use("/api/v1/content", contentRouter);
 
 async function main() {
-  await mongoose.connect(
-    "mongodb+srv://aman:1cbYwjmP8LlKclTF@cluster0.3lzlb.mongodb.net/second-brainApp"
-  );
+  // @ts-ignore
+  await mongoose.connect(process.env.MONGO_URL);
   app.listen(3000);
 }
 
