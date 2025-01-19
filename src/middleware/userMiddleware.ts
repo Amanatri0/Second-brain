@@ -1,17 +1,25 @@
 import { Response, Request, NextFunction } from "express";
-import jwt, { JwtPayload } from "jsonwebtoken";
-const JWT_PASSWORD = "abcdefghicklmnop1234456";
-
-interface CustomRequest extends Request {
-  id: string;
+declare global {
+  namespace Express {
+    interface Request {
+      userId?: string;
+    }
+  }
 }
+import jwt, { JwtPayload } from "jsonwebtoken";
+import { string } from "zod";
+const JWT_PASSWORD = process.env.JWT_PASSWORD;
 
-export async function userMiddleware(
-  req: CustomRequest,
+// interface CustomRequest extends Request {
+//   id: string;
+// }
+
+export const userMiddleware = async (
+  req: Request,
   res: Response,
   next: NextFunction
-) {
-  const userInfoHeaders = req.headers.authentication as string;
+) => {
+  const userInfoHeaders = req.headers["authorization"] as string;
   try {
     if (!userInfoHeaders) {
       res.status(411).send({
@@ -21,11 +29,17 @@ export async function userMiddleware(
 
     const verifiedToken = jwt.verify(
       userInfoHeaders,
-      JWT_PASSWORD
+      JWT_PASSWORD as string
     ) as JwtPayload;
 
+    if (verifiedToken === string) {
+      res.status(500).send({
+        message: "User Middleware check failed",
+      });
+    }
+
     if (verifiedToken) {
-      req.id = verifiedToken.id;
+      req.userId = verifiedToken.id;
       next();
       return;
     }
@@ -38,4 +52,4 @@ export async function userMiddleware(
       error,
     });
   }
-}
+};

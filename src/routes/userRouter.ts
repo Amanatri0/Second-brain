@@ -2,9 +2,8 @@ import { Router } from "express";
 import { z } from "zod";
 import { UserModel } from "../database/db";
 import jwt from "jsonwebtoken";
-const JWT_PASSWORD = "abcdefghicklmnop1234456";
+const JWT_PASSWORD = process.env.JWT_PASSWORD;
 import bcrypt from "bcrypt";
-import { userMiddleware } from "../middleware/userMiddleware";
 
 const userRouter = Router();
 
@@ -42,8 +41,8 @@ userRouter.post("/signup", async (req, res) => {
     });
   } catch (error) {
     res.status(500).send({
-      message: "Something went wrong",
-      error,
+      message: "User already exists",
+      error: (error as Error).message,
     });
   }
 });
@@ -76,23 +75,31 @@ userRouter.post("/login", async (req, res) => {
       res.status(403).send({
         message: "User not found, please signup",
       });
+      return;
     }
 
     //if user is present check for the password and compare the password that the user has provided with the database password
 
-    // if the password is correct create a token and send the token to the user
-    if (loggedInUser) {
-      const token = jwt.sign(
-        {
-          id: loggedInUser._id,
-        },
-        JWT_PASSWORD
-      );
+    const hashedPasssword = bcrypt.compare(password, loggedInUser.password);
 
-      res.json({
-        token: token,
+    // if the password is correct create a token and send the token to the user
+    if (!hashedPasssword) {
+      res.status(500).send({
+        message: "User password failed",
       });
+      return;
     }
+
+    const token = jwt.sign(
+      {
+        id: loggedInUser._id,
+      },
+      JWT_PASSWORD as string
+    );
+
+    res.json({
+      token: token,
+    });
   } catch (error) {
     res.status(500).send({
       message: "Use login failed",
