@@ -5,12 +5,11 @@ import { userMiddleware } from "../middleware/userMiddleware";
 const linkRouter = Router();
 
 function hashValue(len: number) {
-  const char =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890~!@#$%^&*()_+}{:?><";
+  const char = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890";
   let ans = "";
 
   for (let i = 0; i < len; i++) {
-    ans += char[Math.floor(Math.random() * char.length + 1)];
+    ans += char[Math.floor(Math.random() * char.length)];
   }
   return ans;
 }
@@ -18,25 +17,24 @@ function hashValue(len: number) {
 linkRouter.post("/share", userMiddleware, async (req, res) => {
   const userId = req.userId;
   const { share } = req.body;
-
-  console.log(share, userId);
+  const hashV = hashValue(15);
 
   if (share) {
-    const hashV = hashValue(15);
     await LinksModel.create({
       userId: userId,
       hash: hashV,
     });
-
-    console.log(hashV);
 
     res.json({
       message: "Your shareable id is been generated successfully",
       hashV,
     });
   } else {
-    res.status(403).send({
-      message: "Sharable link cannot be generated, something went wrong",
+    await LinksModel.deleteOne({
+      userId: userId,
+    });
+    res.status(303).send({
+      message: "Removed sharable link ",
     });
   }
 });
@@ -45,7 +43,7 @@ linkRouter.get("/:sharablelink", async (req, res) => {
   const sharableLink = req.params.sharablelink;
 
   try {
-    if (!sharableLink || sharableLink === null) {
+    if (!sharableLink) {
       res.status(403).send({
         message: "Please provide a valid params with a valid hash",
       });
@@ -55,7 +53,6 @@ linkRouter.get("/:sharablelink", async (req, res) => {
     const hashStr = await LinksModel.findOne({
       hash: sharableLink,
     });
-
     const user = await UserModel.findOne({
       _id: hashStr?.userId,
     });
@@ -64,7 +61,7 @@ linkRouter.get("/:sharablelink", async (req, res) => {
       userId: user?._id,
     });
 
-    if (user && content && hashStr) {
+    if (user && content) {
       res.json({
         message: `Content of the user ${user.username}`,
         content,
