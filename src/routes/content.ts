@@ -1,7 +1,5 @@
 import { Router, Response, Request } from "express";
 import { ContentModel, UserModel } from "../database/db";
-// import jwt from "jsonwebtoken";
-// import bcrypt from "bcrypt";
 import { userMiddleware } from "../middleware/userMiddleware";
 const contentRouter = Router();
 

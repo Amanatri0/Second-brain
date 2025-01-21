@@ -7,8 +7,6 @@ import bcrypt from "bcrypt";
 
 const userRouter = Router();
 
-// type UserFormed = z.infer<typeof requiredBody>;
-
 userRouter.post("/signup", async (req, res) => {
   try {
     const requiredBody = z.object({

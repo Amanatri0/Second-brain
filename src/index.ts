@@ -14,8 +14,7 @@ app.use("/api/v1/content", contentRouter);
 app.use("/api/v1/link", linkRouter);
 
 async function main() {
-  // @ts-ignore
-  await mongoose.connect(process.env.MONGO_URL);
+  await mongoose.connect(process.env.MONGO_URL as string);
   app.listen(3000);
 }
 
